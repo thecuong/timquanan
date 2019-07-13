@@ -5,19 +5,22 @@ const mongoose = require('mongoose');
 var userSchema= mongoose.Schema({
     uid:String,
     name:String,
-    imgprofile: String,
+    imgprofile: {
+        type:String,
+        unique:false,
+        required:false
+    },
     SaveStore: [{
-        idStore:String,
-        urlImage:String,
+        idStore:{
+            type:String,
+            unique:false,
+            required:false
+        },
         ImgName:{
             type:String,
-            unique:true,
-            required:true,
-        },
-        address:String,
-        kinhdo:String,
-        vido:String,
-        contents:String,
+            unique:false,
+            required:false
+        }
     }]
 })
 module.exports=mongoose.model('userr',userSchema);

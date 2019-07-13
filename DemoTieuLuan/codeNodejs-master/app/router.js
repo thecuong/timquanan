@@ -1,5 +1,6 @@
 var User = require('./model/user.js')
 var Poster = require('./model/poster.js')
+var Contribute = require('./model/contribute.js')
 var fileSystem = require('fs');
 
 
@@ -37,6 +38,7 @@ app.post('/addStore',function(req,res){
   console.log(req.body.poster)
     var body=req.body.poster;
    var Post = new Poster({
+    addminCheck:"Yes",
     urlImage: body.Urlstore,
     ImgName:body.NameStore,
     address:body.AddrStore,
@@ -153,36 +155,27 @@ var asdasd = body.UrlFood
 
 //read
 app.get('/read',function(req,res){
-// tìm kiếm tất cả các vận động viên
-var query = Poster.find();
-
-// chọn ra hai trường 'name' và 'age'
-// query.select('name age');
-
-// // giới hạn kết quả lại 5 bản ghi
-// query.limit(5);
-
-// sắp xếp theo tên
+var query = Poster.find({'addminCheck':'Yes'});
 query.sort({ _id: -1 });
 
 // thực thi câu truy vấn
 query.exec(function (err, athletes) {
   if (err) return handleError(err);
   res.json({"result": athletes})
-  // athletes chứa một danh sách 5 vận động viên chơi tennis được xếp theo tên
 })
 
-  // Poster.find({}, function (err, users) {
-  //   res.json({"result": users});
-// });
 })
 // find
 app.post('/find',function(req,res){
   console.log(req.body.poster)
   var body = req.body.poster
 
-  Poster.findOne({_id: req.body.idfind},function(error, user){
-    res.json({"result": user});
+  var find = Poster.findOne({_id: req.body.idfind})
+  find.exec(function(err, athletes) {
+    if (err) {
+      return handleError(err)
+    }
+    res.json({"result": athletes})
   })
 
   
@@ -205,34 +198,28 @@ app.post('/addUsers',function(req,res){
     const{uid,name,imgprofile} = req.body
    User.create({ 
      uid,name,imgprofile
-  },function (err, results) {
+  },{unique: false, sparse: true},function (err, results) {
+    console.log(err);
     console.log(results);
   res.json({results}) })
 });
-
-
-
-app.post('/addSaveUser',function(req, res){
+app.post('/addSaveUsers',function(req, res){
   console.log(req.body.userr)
   var body = req.body.userr;
-
+const {IDStore,iduser,NameStore} = req.body
   var MoreConTen = { 
-  "idStore" : req.body.IDStore,
-  "urlImage": req.body.Urlstore,
-  "ImgName":req.body.NameStore,
-  "address": req.body.AddrStore,
-  "kinhdo": req.body.kinhdo,
-  "vido": req.body.vido,
-  "contents": req.body.ConStore
+  "idStore" : IDStore,
+  "ImgName": NameStore
 }
-  User.findOneAndUpdate( {uid: req.body.iduser},
+
+  User.findOneAndUpdate( {"uid": iduser},
     {$push:
       { 
         SaveStore: MoreConTen
       }
-    },
-  {safe: true, upsert: true},
+    },{upsert: true},
   function(err, doc) {
+    console.log(err)
     res.json(doc)
   })
 })
@@ -240,8 +227,6 @@ app.post('/addSaveUser',function(req, res){
 app.post('/deleteSave',function(req,res){
   console.log(req.body.userr)
   var body = req.body.userr
-  
-
   User.update({uid: req.body.uid},
     {$pull:{
       SaveStore: {
@@ -254,10 +239,8 @@ app.post('/deleteSave',function(req,res){
        return res.send(err);
      }
      return res.json(model);
-     
     }
   )
-
 })
 app.post('/removeUser', function(req,res){
   console.log(req.body.userr)
@@ -321,28 +304,6 @@ var comment2 = { "uid" : uid,
   })
 })
 
-//add comments 2
-// app.post('/addComments',function(req,res){
-//   console.log(req.body.poster)
-//   var body = req.body.poster;
-//   // const{idupdata,uid,content,name,imgprofile} = req.body
-// var comment = { "uid" : req.body.uid,
-// "content": req.body.cmt,
-// "name": req.body.name,
-// "imgprofile" : req.body.imgac
-// }
-//   Poster.findOneAndUpdate( {_id: req.body.id},
-//     {$push:
-//       { 
-//         Comments: comment
-//       }
-//     },
-//   {safe: true, upsert: true},
-//   function(err, doc) {
-//     res.json(doc)
-//   })
-// })
-
 app.post('/editComment',function(req,res) {
   console.log(req.body.poster)
   var body = req.body.poster
@@ -360,5 +321,101 @@ app.post('/editComment',function(req,res) {
   })
 })
 
+app.post('/deleteComment', function(req,res) {
+  console.log(req.body.poster)
+  var body = req.body.poster
+
+  Poster.update({_id: req.body.IDStore}, {
+    $pull: {
+      Comments: {
+        _id: req.body.idCmt
+      }
+    }
+    }, {multi: true}, function(err,model) {
+      if (err) {
+        console.log(err)
+        return res.send(err)
+      }
+      return res.json(model)
+    })
+})
+//user read store
+app.post('/userReadStore',function(req,res){
+  console.log(req.body.poster)
+  var body = req.body.poster
+Poster.find({uID: req.body.userID},function(error, user){
+    res.json({"result": user});
+  })
+
+  
+})
+//user add store
+app.post('/useAddStore',function(req,res){
+  console.log(req.body.poster)
+    var body = req.body;
+    var Post = new Poster(body)
+   Post.save(function (err, results) {
+    console.log(results);
+  res.json({results}) })
+});
+//updata store user
+app.post('/userUpdateStore',function(req,res){
+  console.log(req.body.poster)
+  var body = req.body;
+  const{idupdata} = req.body
+  Poster.findByIdAndUpdate(idupdata , body,
+     { new: true }, function (err, tank) {
+   if (err) return handleError(err)
+   res.send(tank)
+ });
+})
+//user read my Store
+app.post('/userReadShareStore',function(req,res){
+  console.log(req.body.poster)
+  var body = req.body;
+  var query = Poster.find({'uID':req.body.uID});
+  query.sort({ _id: -1 });
+  
+  // thực thi câu truy vấn
+  query.exec(function (err, athletes) {
+    if (err) return handleError(err);
+    res.json({"result": athletes})
+  })
+  
+  })
+//get web
+  app.get("/UserShare", (req, res)=>{
+    Poster.find({'addminCheck':'No'}, (err, blogs)=>{
+      if(err){
+        console.log("Error!");
+        console.log(err);
+      } else {
+          res.render("pages/UserShareStore", {blogs: blogs});
+      }
+    });
+  });
+  app.post('/AddminUpdatePostUser',function(req,res){
+    console.log(req.body.poster)
+    var body = req.body.poster;
+    var update = { "vido": body.vido,
+    "kinhdo":body.kinhdo,
+    "addminCheck":"Yes"}
+    Poster.findByIdAndUpdate(body.id , update,
+       { new: true }, function (err, tank) {
+     if (err) return handleError(err)
+     res.send(tank)
+   });
+  })
+// user remove store
+app.post('/userRemoveStore', function(req,res){
+  console.log(req.body.poster)
+    var body=req.body.poster;
+  
+    Poster.deleteOne({_id: req.body.IDStore}, function (err,res) {
+      if (err) throw err;
+      console.log('delete success: record'); 
+  });
+  res.json(OK);
+})
 
 }//end modul

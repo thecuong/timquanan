@@ -3,11 +3,13 @@
 const mongoose = require('mongoose');
 
 var userSchema= mongoose.Schema({
+    uID:String,
+    addminCheck:String,
     urlImage:String,
     ImgName:{
         type:String,
-        unique:true,
-        required:true,
+        unique:false,
+        required:false
     },
     address:String,
     kinhdo:String,
@@ -19,10 +21,26 @@ var userSchema= mongoose.Schema({
         Price:String
     }],
     Comments:[{
-        uid: String,
-        content: String,
-        name:String,
-        imgprofile: String
+        uid: {
+            type:String,
+            unique:false,
+            required:false
+        },
+        content: {
+            type:String,
+            unique:false,
+            required:false
+        },
+        name:{
+            type:String,
+            unique:false,
+            required:false
+        },
+        imgprofile: {
+            type:String,
+            unique:false,
+            required:false
+        }
 
     }]
 })
